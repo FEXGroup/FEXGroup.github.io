@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MemoryMaster - Trening Pamięci</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #06b6d4;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --gray-dark: #1e293b;
+            --gray: #374151;
+            --gray-light: #9ca3af;
+            --white: #ffffff;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 260px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem 1.5rem;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            z-index: 1001;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .logo .logo-text {
+            transition: opacity 0.2s ease;
+        }
+
+        .nav-menu {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            color: var(--gray-light);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--glass);
+            color: var(--white);
+        }
+
+        .user-profile {
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--glass-border);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .xp-bar-container {
+            font-size: 0.75rem;
+            color: var(--gray-light);
+        }
+        .xp-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--gray-dark);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 0.25rem;
+        }
+        .xp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+
+        /* --- Main Content --- */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .mobile-menu-toggle {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--white);
+        }
+
+        .welcome h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .welcome p {
+            color: var(--gray-light);
+            font-size: 1.125rem;
+        }
+
+        /* --- Game Grid & Cards --- */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .game-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .game-card.locked .game-icon {
+            filter: grayscale(1);
+        }
+
+        .game-card:not(.locked):hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.1);
+        }
+
+        .game-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .game-description {
+            color: var(--gray-light);
+            line-height: 1.6;
+            min-height: 50px;
+        }
+        
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--gray-light);
+            border-top: 1px solid var(--glass-border);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* --- Game Views --- */
+        .view { display: none; }
+        .view.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            background: var(--glass);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .game-info h2 { font-size: 1.75rem; }
+        .game-info p { color: var(--gray-light); }
+
+        .game-score { display: flex; gap: 2rem; align-items: center; }
+        .score-item { text-align: center; }
+        .score-value { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
+        .score-label { font-size: 0.875rem; color: var(--gray-light); }
+
+        /* Card Game */
+        .cards-display {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            max-width: 400px;
+            margin: 1rem auto;
+        }
+        .playing-card {
+            aspect-ratio: 2/3; background: var(--gray-dark);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; cursor: pointer; transition: all 0.4s ease;
+            transform-style: preserve-3d; border: 3px solid transparent; color: var(--dark);
+        }
+        .playing-card.flash-correct { animation: flash-green 0.4s; }
+        .playing-card.flash-incorrect { animation: flash-red 0.4s; }
+        @keyframes flash-green { 50% { border-color: var(--success); } }
+        @keyframes flash-red { 50% { border-color: var(--danger); } }
+
+        .playing-card .card-face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; display: flex;
+            align-items: center; justify-content: center;
+            border-radius: 9px;
+        }
+        .card-front { background: var(--white); }
+        .card-back { background: linear-gradient(135deg, var(--primary), var(--secondary)); transform: rotateY(180deg); }
+        .playing-card.flipped { transform: rotateY(180deg); }
+
+        /* Simon Game (Pattern Grid) */
+        .simon-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem; max-width: 400px; margin: 1rem auto;
+        }
+        .simon-cell {
+            aspect-ratio: 1; border-radius: 12px; cursor: pointer;
+            transition: all 0.1s ease; background-color: var(--gray);
+        }
+        .simon-cell.active { transform: scale(1.05); background-color: var(--secondary); box-shadow: 0 0 20px var(--secondary); }
+        
+        /* Spatial Memory Game */
+        .spatial-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem; max-width: 500px; margin: 1rem auto;
+        }
+        .spatial-cell {
+            aspect-ratio: 1; border-radius: 12px; background-color: var(--gray);
+            transition: all 0.2s ease; cursor: pointer;
+        }
+        .spatial-cell.active { background-color: var(--primary); }
+        .spatial-cell.correct { background-color: var(--success); }
+        .spatial-cell.incorrect { background-color: var(--danger); }
+        
+        /* Word Recall & Number Chain Games */
+        .recall-area { max-width: 600px; margin: 1rem auto; }
+        .recall-display {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: 2rem; border-radius: 16px; min-height: 150px;
+            display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 1rem;
+            font-size: 2.5rem; font-weight: bold; letter-spacing: 0.1em;
+        }
+        .recall-display p { font-size: 1.5rem; letter-spacing: normal; }
+        .recall-input-area { margin-top: 1rem; }
+        .recall-input {
+            width: 100%; padding: 1rem; font-size: 1.5rem; text-align: center;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 12px; color: var(--white);
+        }
+        .submitted-words { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+        .word-tag { background: var(--gray); padding: 0.5rem 1rem; border-radius: 8px; }
+
+
+        /* --- General Components --- */
+        .timer-bar-container {
+            width: 100%; max-width: 500px; margin: 1rem auto;
+            height: 8px; background: var(--gray-dark); border-radius: 4px; overflow: hidden;
+        }
+        .timer-bar-fill {
+            height: 100%; background: linear-gradient(90deg, var(--accent), var(--warning));
+            width: 100%; transition: width 0.1s linear;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: all 0.3s ease; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.5rem; margin: 0.5rem;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: var(--white); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3); }
+        .btn-secondary { background: var(--glass); color: var(--white); border: 1px solid var(--glass-border); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* Modal */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px); z-index: 2000;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: var(--gray-dark); border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 2.5rem; max-width: 450px;
+            width: 90%; text-align: center; animation: scaleIn 0.3s ease;
+        }
+        .modal-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .modal-icon.success { color: var(--success); }
+        .modal-icon.fail { color: var(--danger); }
+        .modal-title { font-size: 1.75rem; margin-bottom: 0.5rem; }
+        .modal-text { color: var(--gray-light); margin-bottom: 1.5rem; }
+
+        /* Settings View */
+        .settings-group {
+            background: var(--glass); padding: 1.5rem;
+            border-radius: 16px; margin-bottom: 1.5rem;
+            border: 1px solid var(--glass-border);
+        }
+        .settings-group h3 { margin-bottom: 1rem; }
+        .setting-item {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 0.5rem;
+        }
+        .setting-item input[type="text"] {
+            background: var(--gray-dark);
+            border: 1px solid var(--glass-border);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--gray); transition: .4s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Stats View */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .stat-card {
+            background: var(--glass); padding: 1.5rem;
+            border-radius: 16px; border: 1px solid var(--glass-border);
+        }
+        .stat-card h3 { color: var(--secondary); }
+        .stat-card p { font-size: 2rem; font-weight: bold; }
+        
+        /* Achievements View */
+        .achievements-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .achievement-card {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 1.5rem; text-align: center;
+            opacity: 0.5; transition: all 0.3s ease;
+        }
+        .achievement-card.unlocked {
+            opacity: 1; border-color: var(--accent);
+        }
+        .achievement-card .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .achievement-card.unlocked .icon { color: var(--accent); }
+        .achievement-card h4 { margin-bottom: 0.5rem; }
+        .achievement-card p { font-size: 0.8rem; color: var(--gray-light); }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed; bottom: -100px; left: 50%;
+            transform: translateX(-50%); background: var(--gray-dark);
+            color: var(--white); padding: 1rem 1.5rem; border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 3000;
+            transition: bottom 0.5s ease-in-out;
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .toast.show { bottom: 20px; }
+
+
+        /* --- Responsive --- */
+        @media (max-width: 992px) {
+            .sidebar { position: fixed; height: 100%; transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { padding: 1.5rem; }
+            .mobile-menu-toggle { display: block; }
+        }
+        @media (max-width: 768px) {
+            .welcome h1 { font-size: 2rem; }
+            .game-header { flex-direction: column; gap: 1rem; }
+            .games-grid { grid-template-columns: 1fr; }
+            .simon-grid, .spatial-grid { grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        /* --- Helper classes --- */
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <span class="logo-text">MemoryMaster</span>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item"><a class="nav-link active" data-view="dashboard"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+                <li class="nav-item"><a class="nav-link" data-view="statistics"><i class="fas fa-chart-line"></i><span>Statystyki</span></a></li>
+                <li class="nav-item"><a class="nav-link" data-view="achievements"><i class="fas fa-trophy"></i><span>Osiągnięcia</span></a></li>
+                <li class="nav-item"><a class="nav-link" data-view="settings"><i class="fas fa-cog"></i><span>Ustawienia</span></a></li>
+            </ul>
+
+            <div class="user-profile">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar"></div>
+                    <div>
+                        <div id="username" style="font-weight: 600;"></div>
+                        <div id="user-level" style="font-size: 0.875rem; color: var(--gray-light);"></div>
+                    </div>
+                </div>
+                <div class="xp-bar-container">
+                    <span>XP: <span id="xp-value">0 / 100</span></span>
+                    <div class="xp-bar"><div class="xp-bar-fill" id="xp-bar-fill"></div></div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <button class="mobile-menu-toggle" id="mobile-menu-toggle"><i class="fas fa-bars"></i></button>
+            </header>
+
+            <!-- Dashboard View -->
+            <div class="view active" id="dashboard-view">
+                <div class="welcome">
+                    <h1 id="welcome-header">Witaj w MemoryMaster! 🧠</h1>
+                    <p>Wybierz grę i rozpocznij trening umysłu.</p>
+                </div>
+                <div class="games-grid" id="games-grid-container">
+                    <!-- Game cards will be dynamically generated here -->
+                </div>
+            </div>
+
+            <!-- Game Views -->
+            <div class="view" id="card-sequence-view">
+                <div class="game-header">
+                    <div class="game-info"><h2>Sekwencja Kart</h2><p>Zapamiętaj kolejność kart</p></div>
+                    <div class="game-score">
+                        <div class="score-item"><div class="score-value" id="card-score">0</div><div class="score-label">Punkty</div></div>
+                        <div class="score-item"><div class="score-value" id="card-level">1</div><div class="score-label">Poziom</div></div>
+                    </div>
+                </div>
+                <h3 id="card-timer" class="game-timer"></h3>
+                <div class="cards-display" id="cards-container"></div>
+                <div>
+                    <button class="btn btn-primary" id="start-card-game"><i class="fas fa-play"></i> Start</button>
+                    <button class="btn btn-secondary back-to-dash"><i class="fas fa-arrow-left"></i> Powrót</button>
+                </div>
+            </div>
+
+            <div class="view" id="simon-says-view">
+                <div class="game-header">
+                    <div class="game-info"><h2>Siatka Wzorów</h2><p>Zapamiętaj wzór i powtórz sekwencję</p></div>
+                    <div class="game-score">
+                        <div class="score-item"><div class="score-value" id="simon-score">0</div><div class="score-label">Punkty</div></div>
+                        <div class="score-item"><div class="score-value" id="simon-level">1</div><div class="score-label">Poziom</div></div>
+                    </div>
+                </div>
+                <h3 id="simon-timer" class="game-timer"></h3>
+                <div class="simon-grid" id="simon-grid"></div>
+                <div>
+                    <button class="btn btn-primary" id="start-simon-game"><i class="fas fa-play"></i> Start</button>
+                    <button class="btn btn-secondary back-to-dash"><i class="fas fa-arrow-left"></i> Powrót</button>
+                </div>
+            </div>
+            
+            <div class="view" id="spatial-memory-view">
+                <div class="game-header">
+                    <div class="game-info"><h2>Pamięć Przestrzenna</h2><p>Zapamiętaj pozycje podświetlonych pól</p></div>
+                    <div class="game-score">
+                        <div class="score-item"><div class="score-value" id="spatial-score">0</div><div class="score-label">Punkty</div></div>
+                        <div class="score-item"><div class="score-value" id="spatial-level">1</div><div class="score-label">Poziom</div></div>
+                    </div>
+                </div>
+                <h3 id="spatial-timer" class="game-timer"></h3>
+                <div class="spatial-grid" id="spatial-grid"></div>
+                <div>
+                    <button class="btn btn-primary" id="start-spatial-game"><i class="fas fa-play"></i> Start</button>
+                    <button class="btn btn-secondary back-to-dash"><i class="fas fa-arrow-left"></i> Powrót</button>
+                </div>
+            </div>
+            
+            <div class="view" id="word-recall-view">
+                <div class="game-header">
+                    <div class="game-info"><h2>Pamięć Słów</h2><p>Zapamiętaj jak najwięcej słów z listy</p></div>
+                    <div class="game-score">
+                        <div class="score-item"><div class="score-value" id="word-score">0</div><div class="score-label">Punkty</div></div>
+                        <div class="score-item"><div class="score-value" id="word-level">1</div><div class="score-label">Poziom</div></div>
+                    </div>
+                </div>
+                <div class="recall-area">
+                    <h3 id="word-timer" class="game-timer"></h3>
+                    <div class="recall-display" id="word-display-area"></div>
+                    <div class="recall-input-area hidden" id="word-input-area">
+                        <input type="text" id="word-input-field" class="recall-input" placeholder="Wpisz słowo i naciśnij Enter...">
+                        <div class="submitted-words" id="submitted-words-area"></div>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-primary" id="start-word-game"><i class="fas fa-play"></i> Start</button>
+                    <button class="btn btn-secondary back-to-dash"><i class="fas fa-arrow-left"></i> Powrót</button>
+                </div>
+            </div>
+            
+            <div class="view" id="number-chain-view">
+                <div class="game-header">
+                    <div class="game-info"><h2>Łańcuch Liczb</h2><p>Zapamiętaj i wpisz sekwencję cyfr</p></div>
+                    <div class="game-score">
+                        <div class="score-item"><div class="score-value" id="number-score">0</div><div class="score-label">Punkty</div></div>
+                        <div class="score-item"><div class="score-value" id="number-level">1</div><div class="score-label">Poziom</div></div>
+                    </div>
+                </div>
+                <div class="recall-area">
+                    <h3 id="number-timer" class="game-timer"></h3>
+                    <div class="recall-display" id="number-display-area"></div>
+                    <div class="recall-input-area hidden" id="number-input-area">
+                        <input type="text" id="number-input-field" class="recall-input" inputmode="numeric" pattern="[0-9]*" placeholder="Wpisz liczbę...">
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-primary" id="start-number-game"><i class="fas fa-play"></i> Start</button>
+                    <button class="btn btn-secondary back-to-dash"><i class="fas fa-arrow-left"></i> Powrót</button>
+                </div>
+            </div>
+
+            <!-- Statistics View -->
+            <div class="view" id="statistics-view">
+                <h1>Twoje Statystyki</h1>
+                <div class="stats-grid" id="stats-grid-container"></div>
+                 <button class="btn btn-secondary back-to-dash" style="margin-top: 2rem;"><i class="fas fa-arrow-left"></i> Powrót</button>
+            </div>
+            
+            <!-- Achievements View -->
+            <div class="view" id="achievements-view">
+                <h1>Osiągnięcia</h1>
+                <div class="achievements-grid" id="achievements-grid-container"></div>
+                <button class="btn btn-secondary back-to-dash" style="margin-top: 2rem;"><i class="fas fa-arrow-left"></i> Powrót</button>
+            </div>
+            
+            <!-- Settings View -->
+            <div class="view" id="settings-view">
+                <h1>Ustawienia</h1>
+                <div class="settings-group">
+                    <h3>Profil</h3>
+                    <div class="setting-item">
+                        <label for="username-input">Nazwa gracza</label>
+                        <input type="text" id="username-input" maxlength="15">
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3>Dźwięk</h3>
+                    <div class="setting-item">
+                        <label for="sound-toggle">Efekty dźwiękowe</label>
+                        <label class="switch">
+                            <input type="checkbox" id="sound-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3>Dane</h3>
+                    <div class="setting-item">
+                        <p>Zresetuj wszystkie swoje postępy.</p>
+                        <button class="btn btn-secondary" id="reset-data-btn" style="background-color: var(--danger);">Resetuj Dane</button>
+                    </div>
+                </div>
+                 <button class="btn btn-secondary back-to-dash" style="margin-top: 2rem;"><i class="fas fa-arrow-left"></i> Powrót</button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-icon" id="modal-icon"></div>
+            <h2 class="modal-title" id="modal-title"></h2>
+            <p class="modal-text" id="modal-text"></p>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" id="modal-retry-btn">Spróbuj ponownie</button>
+                <button class="btn btn-secondary" id="modal-back-btn">Wróć do menu</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div id="toast-notification" class="toast"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DATA MANAGEMENT (localStorage) ---
+        let userData = {};
+
+        const defaultUserData = {
+            username: 'Player', level: 1, xp: 0,
+            settings: { soundEnabled: true },
+            stats: {
+                'card-sequence': { highScore: 0, gamesPlayed: 0 },
+                'simon-says': { highScore: 0, gamesPlayed: 0 },
+                'spatial-memory': { highScore: 0, gamesPlayed: 0 },
+                'word-recall': { highScore: 0, gamesPlayed: 0 },
+                'number-chain': { highScore: 0, gamesPlayed: 0 },
+            },
+            achievements: {
+                'firstGame': false, 'level5': false, 'score1000': false
+            }
+        };
+
+        function saveData() {
+            localStorage.setItem('memoryMasterData', JSON.stringify(userData));
+        }
+
+        function loadData() {
+            const savedData = localStorage.getItem('memoryMasterData');
+            if (savedData) {
+                userData = JSON.parse(savedData);
+                // Ensure new games/stats/achievements are added to old save files
+                userData.stats = {...defaultUserData.stats, ...userData.stats};
+                userData.achievements = {...defaultUserData.achievements, ...userData.achievements};
+            } else {
+                userData = JSON.parse(JSON.stringify(defaultUserData)); // Deep copy
+            }
+            updateUI();
+        }
+        
+        function resetData() {
+            if (confirm('Czy na pewno chcesz zresetować wszystkie swoje postępy? Ta operacja jest nieodwracalna.')) {
+                localStorage.removeItem('memoryMasterData');
+                loadData(); // Load default data
+                showToast('Dane zostały zresetowane.');
+            }
+        }
+
+        function addXp(score) {
+            const xpGained = Math.round(5 + score / 10); // Balanced XP gain
+            const xpForNextLevel = userData.level * 100;
+            userData.xp += xpGained;
+            if (userData.xp >= xpForNextLevel) {
+                userData.xp -= xpForNextLevel;
+                userData.level++;
+                showToast(`🏆 Gratulacje! Osiągnąłeś poziom ${userData.level}!`);
+                checkAchievements();
+            }
+            updateUI();
+        }
+
+        // --- GLOBAL STATE & ELEMENTS ---
+        const state = { currentView: 'dashboard', activeGame: null };
+        const elements = {
+            sidebar: document.getElementById('sidebar'),
+            mobileMenuToggle: document.getElementById('mobile-menu-toggle'),
+            navLinks: document.querySelectorAll('.nav-link'),
+            views: document.querySelectorAll('.view'),
+            backToDashButtons: document.querySelectorAll('.back-to-dash'),
+            modal: { overlay: document.getElementById('result-modal'), icon: document.getElementById('modal-icon'), title: document.getElementById('modal-title'), text: document.getElementById('modal-text'), retryBtn: document.getElementById('modal-retry-btn'), backBtn: document.getElementById('modal-back-btn') },
+            user: { avatar: document.getElementById('user-avatar'), name: document.getElementById('username'), level: document.getElementById('user-level'), xpValue: document.getElementById('xp-value'), xpBar: document.getElementById('xp-bar-fill') },
+            settings: { soundToggle: document.getElementById('sound-toggle'), resetBtn: document.getElementById('reset-data-btn'), usernameInput: document.getElementById('username-input') },
+            toast: document.getElementById('toast-notification'),
+            gamesGrid: document.getElementById('games-grid-container'),
+            statsGrid: document.getElementById('stats-grid-container'),
+            achievementsGrid: document.getElementById('achievements-grid-container'),
+        };
+        
+        const gameRegistry = {
+            'card-sequence': { name: 'Sekwencja Kart', icon: 'fa-clone', description: 'Zapamiętaj i odtwórz kolejność pojawiania się kart.', minLevel: 1, gameLogic: null },
+            'simon-says': { name: 'Siatka Wzorów', icon: 'fa-th', description: 'Zapamiętaj wzór podświetlonych pól i powtórz go.', minLevel: 1, gameLogic: null },
+            'spatial-memory': { name: 'Pamięć Przestrzenna', icon: 'fa-map-marker-alt', description: 'Zapamiętaj pozycje obiektów na planszy.', minLevel: 1, gameLogic: null },
+            'number-chain': { name: 'Łańcuch Liczb', icon: 'fa-sort-numeric-up', description: 'Zapamiętaj coraz dłuższe sekwencje cyfr.', minLevel: 2, gameLogic: null },
+            'word-recall': { name: 'Pamięć Słów', icon: 'fa-font', description: 'Zapamiętaj listę słów z różnych kategorii.', minLevel: 3, gameLogic: null },
+            'dual-n-back': { name: 'Dual N-Back', icon: 'fa-brain', description: 'Trenuj pamięć roboczą śledząc pozycje i dźwięki.', minLevel: 5, gameLogic: null },
+        };
+
+        const sounds = {
+            synth: new Tone.Synth().toDestination(),
+            polySynth: new Tone.PolySynth(Tone.Synth).toDestination(),
+            notes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'],
+            play(note, duration = '8n') { if (userData.settings.soundEnabled) this.synth.triggerAttackRelease(note, duration); },
+            playSuccess() { if(userData.settings.soundEnabled) this.polySynth.triggerAttackRelease(['C4', 'E4', 'G4'], '8n'); },
+            playError() { if(userData.settings.soundEnabled) this.polySynth.triggerAttackRelease(['C4', 'D#4', 'A3'], '8n'); },
+            playClick() { if(userData.settings.soundEnabled) this.synth.triggerAttackRelease('C5', '16n'); }
+        };
+
+        // --- UI & NAVIGATION ---
+        function updateUI() {
+            elements.user.name.textContent = userData.username;
+            elements.user.avatar.textContent = userData.username.substring(0, 2).toUpperCase();
+            elements.user.level.textContent = `Poziom ${userData.level}`;
+            const xpForNextLevel = userData.level * 100;
+            elements.user.xpValue.textContent = `${userData.xp} / ${xpForNextLevel}`;
+            elements.user.xpBar.style.width = `${(userData.xp / xpForNextLevel) * 100}%`;
+            elements.settings.soundToggle.checked = userData.settings.soundEnabled;
+            elements.settings.usernameInput.value = userData.username;
+            renderGameCards();
+        }
+
+        function switchView(viewId) {
+            state.currentView = viewId;
+            elements.views.forEach(view => view.classList.toggle('active', view.id === `${viewId}-view`));
+            elements.navLinks.forEach(link => link.classList.toggle('active', link.dataset.view === viewId));
+            if (viewId === 'statistics') renderStats();
+            if (viewId === 'achievements') renderAchievements();
+            if (window.innerWidth <= 992) elements.sidebar.classList.remove('open');
+        }
+        
+        function renderGameCards() {
+            elements.gamesGrid.innerHTML = '';
+            for (const [id, game] of Object.entries(gameRegistry)) {
+                const isLocked = userData.level < game.minLevel;
+                const card = document.createElement('div');
+                card.className = `game-card ${isLocked ? 'locked' : ''}`;
+                card.dataset.game = id;
+                
+                let statsHTML = '';
+                if (userData.stats[id] && !isLocked) {
+                    statsHTML = `<div class="game-stats"><span><i class="fas fa-star"></i> ${userData.stats[id].highScore}</span> <span><i class="fas fa-gamepad"></i> ${userData.stats[id].gamesPlayed}</span></div>`;
+                } else if (isLocked) {
+                     statsHTML = `<div class="game-stats"><span><i class="fas fa-lock"></i> Odblokuj na poziomie ${game.minLevel}</span></div>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="game-icon"><i class="fas ${game.icon}"></i></div>
+                    <h3 class="game-title">${game.name}</h3>
+                    <p class="game-description">${game.description}</p>
+                    ${statsHTML}
+                `;
+                if (!isLocked) {
+                    card.addEventListener('click', () => {
+                        state.activeGame = id;
+                        switchView(id);
+                    });
+                }
+                elements.gamesGrid.appendChild(card);
+            }
+        }
+        
+        function renderStats() {
+            elements.statsGrid.innerHTML = '';
+            for (const [id, game] of Object.entries(gameRegistry)) {
+                if (userData.stats[id]) {
+                    const statCard = document.createElement('div');
+                    statCard.className = 'stat-card';
+                    statCard.innerHTML = `
+                        <h3>${game.name}</h3>
+                        <p>${userData.stats[id].highScore}</p>
+                        <small>Najlepszy wynik</small>
+                        <hr style="margin: 0.5rem 0; border-color: var(--glass-border);">
+                        <p style="font-size: 1.5rem;">${userData.stats[id].gamesPlayed}</p>
+                        <small>Gier rozegranych</small>
+                    `;
+                    elements.statsGrid.appendChild(statCard);
+                }
+            }
+        }
+        
+        function showToast(message) {
+            elements.toast.innerHTML = message;
+            elements.toast.classList.add('show');
+            setTimeout(() => elements.toast.classList.remove('show'), 3000);
+        }
+
+        // --- EVENT LISTENERS ---
+        elements.navLinks.forEach(link => link.addEventListener('click', () => switchView(link.dataset.view)));
+        elements.backToDashButtons.forEach(button => button.addEventListener('click', () => switchView('dashboard')));
+        elements.mobileMenuToggle.addEventListener('click', () => elements.sidebar.classList.toggle('open'));
+        elements.settings.soundToggle.addEventListener('change', (e) => { userData.settings.soundEnabled = e.target.checked; saveData(); });
+        elements.settings.resetBtn.addEventListener('click', resetData);
+        elements.settings.usernameInput.addEventListener('change', (e) => {
+            const newName = e.target.value.trim();
+            if (newName) {
+                userData.username = newName;
+                updateUI();
+                saveData();
+                showToast('Nazwa użytkownika zaktualizowana!');
+            } else {
+                e.target.value = userData.username; // revert if empty
+            }
+        });
+
+        // --- MODAL LOGIC ---
+        function showModal(isSuccess, title, text) {
+            elements.modal.overlay.classList.add('active');
+            elements.modal.title.textContent = title;
+            elements.modal.text.textContent = text;
+            elements.modal.icon.innerHTML = isSuccess ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>';
+            elements.modal.icon.className = `modal-icon ${isSuccess ? 'success' : 'fail'}`;
+        }
+        elements.modal.retryBtn.addEventListener('click', () => {
+            elements.modal.overlay.classList.remove('active');
+            if (state.activeGame && gameRegistry[state.activeGame].gameLogic) {
+                gameRegistry[state.activeGame].gameLogic.start();
+            }
+        });
+        elements.modal.backBtn.addEventListener('click', () => {
+             elements.modal.overlay.classList.remove('active');
+             switchView('dashboard');
+        });
+
+        // --- UTILITY FUNCTIONS ---
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+        const shuffle = array => [...array].sort(() => Math.random() - 0.5);
+
+        // --- GAME LOGIC ---
+
+        // Card Sequence Game
+        const cardGame = {
+            elements: { container: document.getElementById('cards-container'), startButton: document.getElementById('start-card-game'), score: document.getElementById('card-score'), level: document.getElementById('card-level'), timer: document.getElementById('card-timer') },
+            state: { level: 1, score: 0, sequence: [], playerSequence: [], cards: [], isPlayerTurn: false },
+            init() { this.elements.startButton.addEventListener('click', () => this.start()); gameRegistry['card-sequence'].gameLogic = this; },
+            start() { this.state.level = 1; this.state.score = 0; this.updateUI(); this.nextLevel(); },
+            async nextLevel() {
+                this.state.isPlayerTurn = false;
+                this.elements.timer.textContent = 'Zapamiętaj...';
+                const numCards = 4;
+                const sequenceLength = 2 + this.state.level;
+                this.generateCards(numCards);
+                await sleep(500);
+                this.state.sequence = Array.from({ length: sequenceLength }, () => Math.floor(Math.random() * numCards));
+                for (const cardIndex of this.state.sequence) {
+                    const card = this.state.cards[cardIndex];
+                    card.classList.add('flipped');
+                    sounds.play(sounds.notes[cardIndex]);
+                    await sleep(600 - this.state.level * 20);
+                    card.classList.remove('flipped');
+                    await sleep(150);
+                }
+                this.elements.timer.textContent = 'Twoja kolej!';
+                this.state.isPlayerTurn = true; this.state.playerSequence = [];
+            },
+            generateCards(num) {
+                this.elements.container.innerHTML = ''; this.state.cards = [];
+                const icons = shuffle(['<i class="fas fa-star"></i>', '<i class="fas fa-heart"></i>', '<i class="fas fa-bolt"></i>', '<i class="fas fa-moon"></i>']);
+                for (let i = 0; i < num; i++) {
+                    const card = document.createElement('div');
+                    card.classList.add('playing-card'); card.dataset.index = i;
+                    card.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front">${icons[i]}</div>`;
+                    card.addEventListener('click', () => this.handleCardClick(card, i));
+                    this.elements.container.appendChild(card); this.state.cards.push(card);
+                }
+            },
+            handleCardClick(card, index) {
+                if (!this.state.isPlayerTurn) return;
+                sounds.playClick();
+                this.state.playerSequence.push(index);
+                const currentStep = this.state.playerSequence.length - 1;
+                
+                card.classList.remove('flash-correct', 'flash-incorrect');
+                void card.offsetWidth;
+
+                if (this.state.playerSequence[currentStep] !== this.state.sequence[currentStep]) {
+                    card.classList.add('flash-incorrect');
+                    this.gameOver(); return;
+                }
+                
+                card.classList.add('flash-correct');
+
+                if (this.state.playerSequence.length === this.state.sequence.length) {
+                    this.state.score += 10 + this.state.level; this.updateUI();
+                    this.state.level++; 
+                    sounds.playSuccess();
+                    this.state.isPlayerTurn = false;
+                    setTimeout(() => this.nextLevel(), 1000);
+                }
+            },
+            gameOver() {
+                this.state.isPlayerTurn = false;
+                sounds.playError();
+                if (this.state.score > userData.stats['card-sequence'].highScore) userData.stats['card-sequence'].highScore = this.state.score;
+                userData.stats['card-sequence'].gamesPlayed++;
+                addXp(this.state.score); checkAchievements(); saveData();
+                showModal(false, 'Koniec Gry!', `Twój wynik: ${this.state.score}. Poziom: ${this.state.level}.`);
+            },
+            updateUI() { this.elements.score.textContent = this.state.score; this.elements.level.textContent = this.state.level; }
+        };
+
+        // Simon Says Game
+        const simonGame = {
+            elements: { grid: document.getElementById('simon-grid'), startButton: document.getElementById('start-simon-game'), score: document.getElementById('simon-score'), level: document.getElementById('simon-level'), timer: document.getElementById('simon-timer') },
+            state: { level: 1, score: 0, sequence: [], playerSequence: [], isPlayerTurn: false },
+            gridSize: 16,
+            init() { this.elements.startButton.addEventListener('click', () => this.start()); this.generateGrid(); gameRegistry['simon-says'].gameLogic = this; },
+            generateGrid() { this.elements.grid.innerHTML = ''; for (let i = 0; i < this.gridSize; i++) { const cell = document.createElement('div'); cell.classList.add('simon-cell'); cell.dataset.index = i; cell.addEventListener('click', () => this.handleCellClick(i)); this.elements.grid.appendChild(cell); } },
+            start() { this.state.level = 1; this.state.score = 0; this.state.sequence = []; this.updateUI(); this.nextTurn(); },
+            async nextTurn() {
+                this.state.isPlayerTurn = false; this.elements.timer.textContent = 'Zapamiętaj...';
+                this.state.sequence.push(Math.floor(Math.random() * this.gridSize));
+                await sleep(1000);
+                for (const index of this.state.sequence) {
+                    const cell = this.elements.grid.children[index];
+                    cell.classList.add('active'); sounds.play(sounds.notes[index % 8]);
+                    await sleep(400 - this.state.level * 10);
+                    cell.classList.remove('active'); await sleep(150);
+                }
+                this.elements.timer.textContent = 'Twoja kolej!'; this.state.isPlayerTurn = true; this.state.playerSequence = [];
+            },
+            handleCellClick(index) {
+                if (!this.state.isPlayerTurn) return;
+                sounds.playClick();
+                const cell = this.elements.grid.children[index];
+                cell.classList.add('active'); setTimeout(() => cell.classList.remove('active'), 200);
+                this.state.playerSequence.push(index);
+                const currentStep = this.state.playerSequence.length - 1;
+                if (this.state.playerSequence[currentStep] !== this.state.sequence[currentStep]) { this.gameOver(); return; }
+                if (this.state.playerSequence.length === this.state.sequence.length) {
+                    this.state.score += 10 + this.state.level; this.updateUI();
+                    this.state.level++; 
+                    sounds.playSuccess(); this.state.isPlayerTurn = false; this.nextTurn();
+                }
+            },
+            gameOver() {
+                this.state.isPlayerTurn = false;
+                sounds.playError();
+                if (this.state.score > userData.stats['simon-says'].highScore) userData.stats['simon-says'].highScore = this.state.score;
+                userData.stats['simon-says'].gamesPlayed++;
+                addXp(this.state.score); checkAchievements(); saveData();
+                showModal(false, 'Koniec Gry!', `Twój wynik: ${this.state.score}. Poziom: ${this.state.level}.`);
+            },
+            updateUI() { this.elements.score.textContent = this.state.score; this.elements.level.textContent = this.state.level; }
+        };
+        
+        // Spatial Memory Game
+        const spatialGame = {
+            elements: { grid: document.getElementById('spatial-grid'), startButton: document.getElementById('start-spatial-game'), score: document.getElementById('spatial-score'), level: document.getElementById('spatial-level'), timer: document.getElementById('spatial-timer') },
+            state: { level: 1, score: 0, pattern: [], playerSelection: [], isPlayerTurn: false },
+            init() { this.elements.startButton.addEventListener('click', () => this.start()); this.generateGrid(); gameRegistry['spatial-memory'].gameLogic = this; },
+            generateGrid() { this.elements.grid.innerHTML = ''; for (let i = 0; i < 25; i++) { const cell = document.createElement('div'); cell.classList.add('spatial-cell'); cell.dataset.index = i; cell.addEventListener('click', () => this.handleCellClick(i)); this.elements.grid.appendChild(cell); } },
+            start() { this.state.level = 1; this.state.score = 0; this.updateUI(); this.nextLevel(); },
+            async nextLevel() {
+                this.state.isPlayerTurn = false;
+                this.elements.timer.textContent = 'Zapamiętaj pozycje...';
+                this.state.pattern = []; this.state.playerSelection = []; this.clearGrid();
+                const itemsToMemorize = 2 + this.state.level;
+                const availableCells = Array.from({length: 25}, (_, i) => i);
+                this.state.pattern = shuffle(availableCells).slice(0, itemsToMemorize).sort((a, b) => a - b);
+                this.state.pattern.forEach(index => this.elements.grid.children[index].classList.add('active'));
+                await sleep(1500 + itemsToMemorize * 100);
+                this.clearGrid();
+                this.elements.timer.textContent = 'Twoja kolej! Zaznacz zapamiętane pola.';
+                this.state.isPlayerTurn = true;
+            },
+            handleCellClick(index) {
+                if (!this.state.isPlayerTurn) return;
+                const cell = this.elements.grid.children[index];
+                if (this.state.playerSelection.includes(index)) return;
+                sounds.playClick();
+                this.state.playerSelection.push(index);
+                cell.classList.add('active');
+                if (this.state.playerSelection.length === this.state.pattern.length) {
+                    this.checkAnswer();
+                }
+            },
+            async checkAnswer() {
+                this.state.isPlayerTurn = false;
+                this.state.playerSelection.sort((a, b) => a - b);
+                let correct = true;
+                for (let i=0; i<25; i++) {
+                    const isCorrect = this.state.pattern.includes(i);
+                    const isSelected = this.state.playerSelection.includes(i);
+                    const cell = this.elements.grid.children[i];
+                    if (isSelected && isCorrect) cell.classList.replace('active', 'correct');
+                    else if (isSelected && !isCorrect) { cell.classList.replace('active', 'incorrect'); correct = false; }
+                    else if (!isSelected && isCorrect) { cell.classList.add('incorrect'); correct = false; }
+                }
+                await sleep(1500);
+                if (correct) {
+                    this.state.score += 15 + (this.state.level * 2); this.updateUI();
+                    this.state.level++; 
+                    sounds.playSuccess(); this.nextLevel();
+                } else { this.gameOver(); }
+            },
+            gameOver() {
+                this.state.isPlayerTurn = false; sounds.playError();
+                if (this.state.score > userData.stats['spatial-memory'].highScore) userData.stats['spatial-memory'].highScore = this.state.score;
+                userData.stats['spatial-memory'].gamesPlayed++;
+                addXp(this.state.score); checkAchievements(); saveData();
+                showModal(false, 'Koniec Gry!', `Twój wynik: ${this.state.score}. Poziom: ${this.state.level}.`);
+            },
+            clearGrid() { Array.from(this.elements.grid.children).forEach(c => c.className = 'spatial-cell'); },
+            updateUI() { this.elements.score.textContent = this.state.score; this.elements.level.textContent = this.state.level; }
+        };
+        
+        // Word Recall Game
+        const wordRecallGame = {
+            elements: { startButton: document.getElementById('start-word-game'), score: document.getElementById('word-score'), level: document.getElementById('word-level'), timer: document.getElementById('word-timer'), displayArea: document.getElementById('word-display-area'), inputArea: document.getElementById('word-input-area'), inputField: document.getElementById('word-input-field'), submittedArea: document.getElementById('submitted-words-area') },
+            wordList: { zwierzęta: ['lew', 'tygrys', 'słoń', 'żyrafa', 'małpa', 'zebra', 'niedźwiedź', 'wilk'], owoce: ['jabłko', 'banan', 'pomarańcza', 'truskawka', 'winogrono', 'ananas', 'mango'], kraje: ['polska', 'niemcy', 'francja', 'hiszpania', 'włochy', 'japonia', 'kanada', 'brazylia'] },
+            state: { level: 1, score: 0, wordsToMemorize: [], submittedWords: [], isPlayerTurn: false },
+            init() { this.elements.startButton.addEventListener('click', () => this.start()); this.elements.inputField.addEventListener('keydown', e => { if (e.key === 'Enter') this.submitWord(); }); gameRegistry['word-recall'].gameLogic = this; },
+            start() { this.state.level = 1; this.state.score = 0; this.updateUI(); this.nextLevel(); },
+            async nextLevel() {
+                this.state.isPlayerTurn = false;
+                this.elements.timer.textContent = 'Zapamiętaj słowa...';
+                this.elements.inputArea.classList.add('hidden');
+                this.elements.displayArea.classList.remove('hidden');
+                this.elements.submittedArea.innerHTML = ''; this.state.submittedWords = [];
+                const wordCount = 4 + this.state.level;
+                const category = Object.keys(this.wordList)[Math.floor(Math.random() * Object.keys(this.wordList).length)];
+                this.state.wordsToMemorize = shuffle(this.wordList[category]).slice(0, wordCount);
+                this.elements.displayArea.innerHTML = this.state.wordsToMemorize.map(word => `<p>${word}</p>`).join('');
+                await sleep(wordCount * 1200);
+                this.elements.displayArea.classList.add('hidden');
+                this.elements.inputArea.classList.remove('hidden');
+                this.elements.inputField.focus();
+                this.elements.timer.textContent = `Wpisz ${this.state.wordsToMemorize.length} słów. Naciśnij Enter po każdym.`;
+                this.state.isPlayerTurn = true;
+            },
+            submitWord() {
+                const word = this.elements.inputField.value.trim().toLowerCase();
+                if (word && !this.state.submittedWords.includes(word)) {
+                    this.state.submittedWords.push(word);
+                    const tag = document.createElement('div'); tag.className = 'word-tag'; tag.textContent = word;
+                    this.elements.submittedArea.appendChild(tag); this.elements.inputField.value = '';
+                    if (this.state.submittedWords.length === this.state.wordsToMemorize.length) this.checkAnswer();
+                }
+            },
+            checkAnswer() {
+                this.state.isPlayerTurn = false;
+                let correctCount = 0;
+                this.state.submittedWords.forEach(word => { if (this.state.wordsToMemorize.includes(word)) correctCount++; });
+                const roundScore = correctCount * (5 + this.state.level);
+                if (roundScore > 0) {
+                    this.state.score += roundScore; this.state.level++; this.updateUI();
+                    sounds.playSuccess();
+                    showModal(true, 'Dobra robota!', `Zapamiętałeś ${correctCount} z ${this.state.wordsToMemorize.length} słów. Zdobywasz ${roundScore} punktów.`);
+                    elements.modal.retryBtn.textContent = 'Następny poziom';
+                } else this.gameOver();
+            },
+            gameOver() {
+                sounds.playError();
+                if (this.state.score > userData.stats['word-recall'].highScore) userData.stats['word-recall'].highScore = this.state.score;
+                userData.stats['word-recall'].gamesPlayed++;
+                addXp(this.state.score); checkAchievements(); saveData();
+                showModal(false, 'Koniec Gry!', `Twój wynik końcowy: ${this.state.score}. Poziom: ${this.state.level}.`);
+                elements.modal.retryBtn.textContent = 'Spróbuj ponownie';
+            },
+            updateUI() { this.elements.score.textContent = this.state.score; this.elements.level.textContent = this.state.level; }
+        };
+        
+        // Number Chain Game
+        const numberChainGame = {
+            elements: { startButton: document.getElementById('start-number-game'), score: document.getElementById('number-score'), level: document.getElementById('number-level'), timer: document.getElementById('number-timer'), displayArea: document.getElementById('number-display-area'), inputArea: document.getElementById('number-input-area'), inputField: document.getElementById('number-input-field') },
+            state: { level: 1, score: 0, currentNumber: '', isPlayerTurn: false },
+            init() { this.elements.startButton.addEventListener('click', () => this.start()); this.elements.inputField.addEventListener('keydown', e => { if (e.key === 'Enter') this.checkAnswer(); }); gameRegistry['number-chain'].gameLogic = this; },
+            start() { this.state.level = 1; this.state.score = 0; this.updateUI(); this.nextLevel(); },
+            async nextLevel() {
+                this.state.isPlayerTurn = false;
+                this.elements.timer.textContent = 'Zapamiętaj liczbę...';
+                this.elements.inputArea.classList.add('hidden');
+                this.elements.displayArea.classList.remove('hidden');
+                this.elements.inputField.value = '';
+
+                const numLength = Math.min(2 + this.state.level, 8);
+                this.state.currentNumber = Array.from({length: numLength}, () => Math.floor(Math.random() * 10)).join('');
+                this.elements.displayArea.textContent = this.state.currentNumber;
+                
+                await sleep(1500 + numLength * 100);
+                
+                this.elements.displayArea.classList.add('hidden');
+                this.elements.inputArea.classList.remove('hidden');
+                this.elements.inputField.focus();
+                this.elements.timer.textContent = 'Wpisz liczbę i naciśnij Enter';
+                this.state.isPlayerTurn = true;
+            },
+            checkAnswer() {
+                if (!this.state.isPlayerTurn) return;
+                if (this.elements.inputField.value === this.state.currentNumber) {
+                    this.state.isPlayerTurn = false;
+                    this.state.score += 10 + this.state.level;
+                    this.state.level++;
+                    this.updateUI();
+                    sounds.playSuccess();
+                    this.nextLevel();
+                } else {
+                    this.gameOver();
+                }
+            },
+            gameOver() {
+                this.state.isPlayerTurn = false;
+                sounds.playError();
+                if (this.state.score > userData.stats['number-chain'].highScore) userData.stats['number-chain'].highScore = this.state.score;
+                userData.stats['number-chain'].gamesPlayed++;
+                addXp(this.state.score); checkAchievements(); saveData();
+                showModal(false, 'Błędna liczba!', `Twój wynik: ${this.state.score}. Prawidłowa liczba to ${this.state.currentNumber}.`);
+            },
+            updateUI() { this.elements.score.textContent = this.state.score; this.elements.level.textContent = this.state.level; }
+        };
+        
+        // --- ACHIEVEMENTS ---
+        const achievements = {
+            defs: {
+                'firstGame': { name: 'Pierwsze Kroki', desc: 'Zagraj w swoją pierwszą grę.', icon: 'fa-shoe-prints' },
+                'level5': { name: 'Weteran', desc: 'Osiągnij 5 poziom gracza.', icon: 'fa-star' },
+                'score1000': { name: 'Mistrz Punktów', desc: 'Zdobądź 1000 punktów w jednej grze.', icon: 'fa-gem' }
+            },
+            check() {
+                if (!userData.achievements.firstGame && Object.values(userData.stats).some(s => s.gamesPlayed > 0)) this.unlock('firstGame');
+                if (!userData.achievements.level5 && userData.level >= 5) this.unlock('level5');
+                if (!userData.achievements.score1000 && Object.values(userData.stats).some(s => s.highScore >= 1000)) this.unlock('score1000');
+            },
+            unlock(id) {
+                if (!userData.achievements[id]) {
+                    userData.achievements[id] = true;
+                    const ach = this.defs[id];
+                    showToast(`<i class="fas fa-trophy" style="color: var(--accent);"></i> Osiągnięcie: ${ach.name}`);
+                    saveData();
+                }
+            },
+            render() {
+                elements.achievementsGrid.innerHTML = '';
+                for (const [id, ach] of Object.entries(this.defs)) {
+                    const unlocked = userData.achievements[id];
+                    const card = document.createElement('div');
+                    card.className = `achievement-card ${unlocked ? 'unlocked' : ''}`;
+                    card.innerHTML = `<div class="icon"><i class="fas ${ach.icon}"></i></div><h4>${ach.name}</h4><p>${ach.desc}</p>`;
+                    elements.achievementsGrid.appendChild(card);
+                }
+            }
+        };
+        const checkAchievements = achievements.check.bind(achievements);
+        const renderAchievements = achievements.render.bind(achievements);
+        
+        // --- INITIALIZATION ---
+        function initializeApp() {
+            loadData();
+            cardGame.init();
+            simonGame.init();
+            spatialGame.init();
+            wordRecallGame.init();
+            numberChainGame.init();
+        }
+
+        initializeApp();
+    });
+    </script>
+</body>
+</html>
